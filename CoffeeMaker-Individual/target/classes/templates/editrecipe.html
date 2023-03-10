@@ -1,0 +1,198 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+
+<title>Edit Recipe</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+
+<style>
+	
+	#centered{
+		display: flex;
+		justify-content: center;
+		position: relative;
+		padding: 10px;
+	}
+	
+	.submitbutton{
+		margin-left: 10px;
+		margin-right: 10px;
+		font-size: 15px;
+		
+	}
+	
+	#inputlabel{
+		font-size: 25px;
+	}
+	
+	.inputbox{
+		width: 300px;
+	}
+	
+	
+	
+</style>
+
+</head>
+
+<body>
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.js"></script>
+	
+	<script>
+		/*<![CDATA[*/
+		var app = angular.module('myApp', []);
+		app.controller('editRecipeController', function($scope, $http, $q) {
+
+			$scope.changeName = function() {
+				console.log($scope.selectedName);
+			}
+			
+			$scope.changePrice = function() {
+				console.log($scope.selectedPrice);
+			}
+			
+			$scope.getRecipes = function() {
+				console.log("Getting recipes...");
+				$http.get("/api/v1/recipes").then(function(response) {
+					$scope.recipes = response.data;
+				}, function(rejection) {
+					console.error("Error while getting Recipes");
+				});
+			}
+			
+			$scope.reset = function(){
+				$scope.getRecipes();
+				$scope.success = false;
+				$scope.saveButton = false;
+				//recipe object to send to API
+				console.log("Resetting..")
+				if (undefined != $scope.editRecipeForm) {
+					$scope.addRecipeForm.$setPristine(); // reset Form
+				}
+				
+				//get the list of ingredients in the inventory
+				$http.get("/api/v1/recipes").then(function(response) {
+					$scope.recipeNames = response.data;
+					//create checkboxSpec list, used to hold ingredient info and checkbox status
+					for(let i = 0; i < $scope.recipes.length; i++){
+						$http.get("/api/v1/recipes/" + $scope.recipeNames[i].name).then(function(response) {
+							$scope.recipes[i] = response.data;
+						}, function(rejection) {
+							console.error(rejection);
+						})
+					}
+				}, function(rejection) {
+					console.error("Error getting ingredients");
+				})
+				
+			}
+			
+			$scope.saveRecipe = function(currentName, newName, price, ingredients) {
+				console.log(currentName);
+				console.log(newName);
+				console.log(price);
+				console.log(ingredients);
+				$scope.recipeObject = {
+						name: newName,
+						price: price,
+						ingredients: ingredients
+				}
+				$http.put("/api/v1/recipes/" + currentName, $scope.recipeObject)
+	            .then(
+	            function (response) {
+	            		console.log(response);
+	    				$scope.submissionSuccess=true;	         
+	             		$scope.reset();
+	            },
+	            function(rejection){
+	                console.error('Error while editing recipe');
+	                console.log(rejection.data.message);
+	                
+					$scope.submissionSuccess=false;	
+	                
+	             	// Update recipe list
+			        $http.get("/api/v1/recipes").then(function (response) {
+		  				$scope.recipes = response.data;
+		  			});
+	            }
+	            
+	            
+	        );
+			}
+
+			$scope.edit = function() {
+				$http.get("/api/v1/recipes/" + $scope.name).then(function(response) {
+					$scope.selectedRecipe = response.data.name;
+					$scope.selectedName = response.data.name;
+					$scope.selectedPrice = response.data.price;
+					$scope.selectedIngredients = response.data.ingredients;
+					console.log($scope.selectedIngredients);
+					$scope.success = true;
+					$scope.saveButton = true;
+				}, function(rejection) {
+					console.error(rejection);
+					$scope.success = false;
+				});
+			}
+			
+			$scope.reset();
+
+		});
+		/*]]>*/
+	</script>
+	
+	<div ng-app="myApp" ng-controller="editRecipeController">
+		<h1 style="text-align: center; font-size: 50px;">Edit Recipe</h1>
+	
+		
+		
+		<div id="centered">
+			<ul>
+				<li ng-repeat="recipe in recipes"><label>{{recipe.name}}
+						<input type="radio" ng-model="$parent.name" name="name"
+						value="{{recipe.name}}" required="true" />
+				</label></li>
+			</ul>
+			<br />
+
+			<div ng-if="0 >= recipes.length">There are no recipes in the
+				Coffee Maker.</div>
+
+
+		</div>
+
+		<div id="centered" ng-show="success">
+			<label for="recipename" id="inputlabel">Recipe Name: </label>
+			<input type="string" id="units" class="inputbox" ng-model="selectedName">
+		</div>
+		
+		<div id="centered" ng-show="success">
+			<label for="recipeprice" id="inputlabel">Price: </label>
+			<input type="number" id="units" class="inputbox" ng-model="selectedPrice">
+		</div>
+		
+		<div ng-show="success">
+			<div ng-repeat="ingredient in selectedIngredients track by $index"><br>
+				<div id="centered" ng-show=success>
+					<label for="ingredientname" id="inputlabel">{{selectedIngredients[$index].name}}</label>
+					<input type="string" id="units" class="inputbox" ng-model="selectedIngredients[$index].amount">
+				</div>
+			</div>
+		</div>
+	
+		<div id="centered">
+			<button type="button" class="submitbutton" ng-click="edit()">Edit Selected Recipe</button>
+			<button type="button" class="submitbutton" ng-click="reset()">Reset </button>
+			<button ng-show="saveButton" type="button" class="submitbutton" ng-click="saveRecipe(selectedRecipe, selectedName, selectedPrice, selectedIngredients)">Save </button>
+		</div>
+	
+		<div id="centered">
+			<a id="centered" href="/index">Home</a>
+		</div>
+		<div ng-if="submissionSuccess">Recipe edited successfully</div>
+		
+
+	</div>
+	
+
+</body>

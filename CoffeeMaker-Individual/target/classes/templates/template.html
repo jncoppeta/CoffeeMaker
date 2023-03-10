@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<!--- Header information about the page -->
+<body>
+	<div layout:fragment="content">
+		<script	src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.js"></script>
+		<script>
+			/* Without these comments, Thymeleaf will try to parse the Javascript as XML and break itself sometimes */
+			/*<![CDATA[*/ 
+			var app = angular.module('myApp', []);
+			app.controller('populateCtrl', function($scope, $http, $q) {
+				console.log("Log");
+				console.log($scope);
+				$scope.x;
+				$scope.y;
+				$scope.timeIntervals = [
+					{value: 1, display: 'Coffee'},
+					{value: 2, display: 'Chocolate'},
+					{value: 3, display: 'Sugar'},
+					{value: 4, display: 'Milk'}
+				];
+				$scope.commitData = {
+				        "Kai Presler-Marshall (kpresle@ncsu.edu)":
+				            [
+				                { "count": 0, "display": "01/03/2020 00:00", "timestamp": 1583038800000 },
+				                { "count": 0, "display": "03/03/2020 00:00", "timestamp": 1583211600000 }
+				            ],
+				        "Sara Ghodsi (sghodsi@ncsu.edu)":
+				            [
+				                { "count": 0, "display": "01/03/2020 00:00", "timestamp": 1583038800000 },
+				                { "count": 0, "display": "03/03/2020 00:00", "timestamp": 1583211600000 },
+				                { "count": 0, "display": "05/03/2020 00:00", "timestamp": 1583384400000 }
+				            ]
+				};
+				$scope.branches = ["development", "frontend-data-entry", "backend", "developmentT2", 
+					"developmentT1", "main", "kpresle-test", "kpresle-test-2", "frontend-display"];
+				$scope.math = function(a,b){
+					return  ((parseInt(a) + parseInt(b))*10);
+				}
+				$scope.testButton = function () {
+				    alert("Result: " + $scope.x * $scope.y);
+				}
+				
+				/* Logic that handles controlling your page goes here */
+
+			});
+			
+			/* Without these comments, Thymeleaf will try to parse the Javascript as XML and break itself sometimes */
+			/*]]>*/
+		</script>
+
+		<div ng-app="myApp" ng-controller="populateCtrl">
+
+			<!--- Various HTML elements, with extra tags telling Angular how to work with them, go here -->
+			<button type="button" ng-click="testButton()">Click Me!</button>
+			<input type="text" ng-model="x" required="true" />
+			<input type="text" ng-model="y" required="true" />
+			The result is {{math(x,y)}}
+			<div class="col-sm">
+				Select time interval: <br />
+				<select ng-model="interval"
+						ng-options="item as item.display for item in timeIntervals"
+						required="true">
+					<option value="">Select time interval for viewing data</option>
+				</select>
+			</div>
+			
+			<div class="col-sm">
+				(Optional) Select the branches to view <br />
+				<div ng-repeat="branch in branches track by $index">
+					<input type="checkbox"
+						ng-model="$parent.selectedBranches[branch]">
+					<tt> {{branch}}</tt> <!-- remove the extra spaces -->
+					</input>
+				</div>
+			</div>
+			
+			<div ng-repeat="(user, commits) in commitData track by $index">
+				Commits for {{user}}:<br />
+				<div id="{ {user} }">
+					<li ng-repeat="commit in commits">{{commit.display}}</li>
+				</div>
+			</div>
+		</div>
+		
+	</div>
+
+</body>
+</html>

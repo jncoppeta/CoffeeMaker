@@ -1,0 +1,117 @@
+<head>
+
+<title>Update Inventory</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+
+<style>
+	.line1{
+		position: relative;
+		padding: 10px;	
+		
+	}
+	
+	
+	.line2{
+		position: relative;
+		padding: 10px;
+
+	}
+	
+	#centered{
+		display: flex;
+		justify-content: center;
+	}
+	
+	.submitbutton{
+		padding: 10px;
+	}
+	
+	#inputlabel{
+		font-size: 25px;
+	}
+	
+	.inputbox{
+		width: 300px;
+	}
+	
+	
+</style>
+
+</head>
+
+<body>
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.js"></script>
+	
+	<script>
+		/*<![CDATA[*/
+		var app = angular.module('myApp', []);
+		app.controller('editRecipeController', function($scope, $http, $q) {
+			
+			$scope.getInventory = function() {
+				console.log("Getting inventory...")
+				$http.get("/api/v1/inventory").then(function(response) {
+					$scope.inventoryOriginal = response.data.ingredients;
+					$scope.id = response.data.id;
+					console.log(response);
+				}, function(rejection) {
+					console.error("Error while getting Inventory");
+				})
+			}
+			
+			$scope.reset = function() {
+				$scope.getInventory();
+				$scope.inventoryObject = {
+						ingredients: new Array()
+				}
+				$scope.success = true;
+			}
+			
+			$scope.updateInventory = function() {
+				$http.get("/api/v1/inventory").then(function(response) { 
+					for(let i = 0; i < response.data.ingredients.length; i++){
+						$scope.inventoryObject.ingredients[i] = $scope.inventoryOriginal[i];
+						$scope.inventoryObject.ingredients[i].amount = parseInt($scope.inventoryObject.ingredients[i].amount);
+						$http.put("/api/v1/inventory", $scope.inventoryOriginal[i]).then(function(response) {
+						}, function(rejection) {
+							console.error(rejection.data.message);
+						});
+					}
+				}, function(rejection) {
+					console.error(rejection);
+				});
+				console.log($scope.inventoryObject.ingredients.length);
+				for(let i = 0; i < $scope.inventoryObject.length; i++) {
+					console.log($scope.inventoryObject[i]);
+				}
+				console.log("Successfully updated inventory");
+			}
+			$scope.reset();
+		});
+
+			
+	</script>
+	
+	<div ng-app="myApp" ng-controller="editRecipeController">
+		<h1 style="text-align: center; font-size: 50px;">Update Inventory</h1>
+		<div id="ingredientfields">
+			<div ng-repeat="info in inventoryOriginal track by $index">
+				<div id="centered" ng-show="success">
+					<label for="units" id="inputlabel">{{info.name}} Units: </label>
+					<input type="number" id="units" class="inputbox" ng-model="info.amount">
+				</div>
+			</div>
+		</div>
+	
+		<div class="submitbutton" id="centered">
+			<button type="button" ng-click="updateInventory()">Confirm</button>
+			<button type="button" ng-click="reset()">Reset</button>
+		</div>
+
+		<div id="centered">
+			<a id="centered" href="/index">Home</a>
+		</div>
+	</div>
+	
+
+
+</body>
